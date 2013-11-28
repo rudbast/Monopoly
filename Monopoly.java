@@ -4,15 +4,23 @@ import java.util.Random;
 
 public class Monopoly {
 	static Scanner in = new Scanner(System.in);
+	
+	static Gui G = new Gui();
 	static Dice d = new Dice();
 	static Map[] map = new Map[24];
+	
 	static ChanceCard chan = new ChanceCard();
 	static CommunityCard comm = new CommunityCard();
+	
+// shuffle card
 	static int[] cardCh = new int[16];
 	static int[] cardCo = new int[17];
-	static boolean end = false;	// game end signal
-	static int ChIdx = 0, CoIdx = 0;	// card's index (% 16 / 17)
-	static Gui G = new Gui();
+
+// card's index (% 16 / 17)
+	static int ChIdx = 0, CoIdx = 0;
+
+// game end signal
+	static boolean gameOver = false;
 	
 // main program
 	public static void main(String[] args) {
@@ -59,7 +67,7 @@ public class Monopoly {
 				turn(p, t);
 				t++;
 				t %= 2;
-			}while(!end);
+			}while(!gameOver);
 			
 		}while(ch==1);
 	// END
@@ -125,7 +133,7 @@ public class Monopoly {
 				if(map[pos].getType()==0){
 					if(map[pos].getOwner()==p[(t+1)%2].getName() && pay)
 						payRent(p, t, pos, pay);
-					end = transaction(p, t, pos, pay);
+					end = transaction(p, t, pos);
 				}
 			
 			// pajak
@@ -155,23 +163,9 @@ public class Monopoly {
 			// 3 pojok
 				else if(map[pos].getType()==5){
 				// parkir bebas
-					if(pos==12){
-						System.out.println("Anda berada di posisi parkir bebas.");
-						int target;
-						do{
-							System.out.print("Silahkan pilih tujuan anda (index peta[0-23]) : ");
-							target = in.nextInt();
-						}while(target < 0 || target > 23 || target == pos);
-						in.nextLine();
+					if(pos==12)
+						freePark(p[t], pos);
 						
-						System.out.println("Berhasil pindah ke tujuan.");
-						if(target < pos){
-							System.out.println("Anda melewati GO(terima $200).");
-							p[t].altBal(1, 200);
-						}
-						p[t].setPos(target);
-						pos = target;
-					}
 				// hanya lewat (penjara)
 					else {
 						System.out.println("Hanya melewati penjara.");
@@ -185,7 +179,7 @@ public class Monopoly {
 	}
 	
 // transaction
-	public static boolean transaction(Player[] p, int t, int pos, boolean pay) {
+	public static boolean transaction(Player[] p, int t, int pos) {
 		int ch, price, temp;
 		
 		do{
@@ -241,7 +235,7 @@ public class Monopoly {
 						p[(t+1)%2].transfer(p[t], map[pos], pos, price);
 						G.warnai(pos, (t+1)%2);
 						System.out.println("Transaksi berhasil(bayar $" + price + ").");
-						pay = false;
+						return true;
 					}
 					
 				// tawaran dibatal
@@ -291,7 +285,7 @@ public class Monopoly {
 						p[t].transfer(p[(t+1)%2], map[pos], pos, price);
 						System.out.println("Transaksi berhasil(terima $" + price + ").");
 						G.warnai(pos, (t+1)%2);
-						pay = false;
+						return true;
 					}
 					
 				// tawaran dibatal
@@ -304,7 +298,7 @@ public class Monopoly {
 	// pilihan 3 (end turn)
 		else
 			return true;
-			
+
 		return false;
 	}
 	
@@ -432,6 +426,25 @@ public class Monopoly {
 			}while(loop);
 		}
 		return false;
+	}
+	
+// free parking
+	public static void freePark(Player p, int pos) {
+		System.out.println("Anda berada di posisi parkir bebas.");
+		int target;
+		do{
+			System.out.print("Silahkan pilih tujuan anda (index peta[0-23]) : ");
+			target = in.nextInt();
+		}while(target < 0 || target > 23 || target == pos);
+		in.nextLine();
+		
+		System.out.println("Berhasil pindah ke tujuan.");
+		if(target < pos){
+			System.out.println("Anda melewati GO(terima $200).");
+			p.altBal(1, 200);
+		}
+		p.setPos(target);
+		pos = target;
 	}
 
 // monopoly header
